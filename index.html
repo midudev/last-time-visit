@@ -1,4 +1,7 @@
-<small></small>
+<small>
+  <span id="last"></span>
+  <span id="next"></span>
+</small>
 
 <script type="module">
   const res = await fetch('https://geolocation.microlink.io/')
@@ -27,11 +30,36 @@
   })
 
   const source = new EventSource('/visit')
-  const small = document.querySelector('small')
+  const $last = document.getElementById('last')
+  const $next = document.getElementById('next')
+  let ready = true
 
   source.addEventListener('update', (event) => {
+    if (ready === false) return
+
     const { city, country, flag } = JSON.parse(event.data)
-    small.innerHTML = `Last visit from ${city}, ${country} ${flag}`
+    const message = `Last visit from ${city}, ${country} ${flag}`
+    const isLastEmpty = $last.innerHTML === ''
+
+    if (isLastEmpty) {
+      $last.innerHTML = message
+      return
+    }
+
+    $next.innerHTML = message
+
+    $next.style.animation = 'fadeInUp 1s ease-in-out forwards'
+    $last.style.animation = 'fadeOutUp 1s ease-in-out forwards'
+    ready = false
+
+    $next.onanimationend = () => {
+      $next.style.animation = ''
+      $last.style.animation = ''
+
+      $last.innerHTML = message
+      $next.innerHTML = ''
+      ready = true
+    }
   })
 </script>
 
@@ -48,5 +76,34 @@
     color: #f6f6f6;
     text-align: center;
     font-family: Menlo, monospace;
+  }
+
+  small span {
+    display: block;
+    height: 20px;
+  }
+
+  @keyframes fadeOutUp {
+    from {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    to {
+      opacity: 0;
+      transform: translateY(-20px)
+    }
+  }
+
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(0px);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(-20px)
+    }
   }
 </style>
